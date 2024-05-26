@@ -25,6 +25,6 @@ public class Item {
 
     @Override
     public String toString() {
-        return "Item [name=" + name + ", price=" + price + "]";
+        return String.format("Item Name: %s\nPrice: %.2f \n", name, price);
     }
 }
