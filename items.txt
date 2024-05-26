@@ -1,3 +1,10 @@
-Item1,10.50
-Item2,20.75
-Item3,5.25
+Pizza,37.5
+Cheeseburger,20.75
+Hot Dog,9.25
+Spaghetti,15.99
+Sushi,24.5
+Tacos,12.75
+Steak,30.0
+Salad,8.99
+Fried Chicken,18.25
+Ice Cream,6.5
