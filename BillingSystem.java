@@ -44,4 +44,22 @@ public class BillingSystem {
         return items;
     }
 
+    public void addCustomer(Customer customer) {
+        customers.add(customer);
+    }
+
+    public void addItem(Item item) {
+        items.add(item);
+    }
+
+    public Customer findCustomerById(String id) {
+        for (Customer customer : customers) {
+            if (customer.getId().equals(id)) {
+                return customer;
+            }
+        }
+        return null;
+    }
+    
+
 }
