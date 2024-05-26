@@ -1,0 +1,2 @@
+C001,John Doe,john.doe@example.com
+C002,Jane Smith,jane.smith@example.com
