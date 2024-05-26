@@ -2,6 +2,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +37,14 @@ public class BillingSystemGUI extends JFrame {
         add(tabbedPane);
 
         setVisible(true);
+
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e){
+                saveDataBeforeClose();
+            }
+        });
+
     }
 
     private void loadInitialData() {
@@ -90,6 +100,16 @@ public class BillingSystemGUI extends JFrame {
         panel.add(refreshButton, BorderLayout.SOUTH);
         return panel;
     }
+        
+    private void saveDataBeforeClose() {
+        try {
+            billingSystem.saveData("customers.txt", "items.txt");
+        } catch (IOException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error occurred while saving data.");
+        }
+}
+
 
     private void updateItemArea() {
         itemArea.setText("Items:\n");
@@ -100,7 +120,7 @@ public class BillingSystemGUI extends JFrame {
 
     private JPanel createAddCustomerPanel() {
         JPanel panel = new JPanel(new GridLayout(4, 2));
-
+    
         JLabel idLabel = new JLabel("Customer ID:");
         JTextField idField = new JTextField();
         JLabel nameLabel = new JLabel("Name:");
@@ -108,7 +128,7 @@ public class BillingSystemGUI extends JFrame {
         JLabel emailLabel = new JLabel("Email:");
         JTextField emailField = new JTextField();
         JButton addButton = new JButton("Add Customer");
-
+    
         panel.add(idLabel);
         panel.add(idField);
         panel.add(nameLabel);
@@ -116,22 +136,30 @@ public class BillingSystemGUI extends JFrame {
         panel.add(emailLabel);
         panel.add(emailField);
         panel.add(addButton);
-
+    
         addButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String id = idField.getText();
                 String name = nameField.getText();
                 String email = emailField.getText();
+    
+                // Check if customer ID already exists
+                if (billingSystem.findCustomerById(id) != null) {
+                    JOptionPane.showMessageDialog(panel, "Customer with this ID already exists!");
+                    return; // Exit method if ID is duplicate
+                }
+    
                 Customer customer = new Customer(id, name, email);
                 billingSystem.addCustomer(customer);
                 JOptionPane.showMessageDialog(panel, "Customer added successfully!");
                 updateCustomerArea();
             }
         });
-
+    
         return panel;
     }
+    
 
     private JPanel createAddItemPanel() {
         JPanel panel = new JPanel(new GridLayout(3, 2));
@@ -204,25 +232,30 @@ public class BillingSystemGUI extends JFrame {
     }
 
     private JPanel createPurchasePanel() {
-        JPanel panel = new JPanel(new GridLayout(4, 2));
-
+        JPanel panel = new JPanel(new GridLayout(5, 2));
+    
         JLabel customerIdLabel = new JLabel("Customer ID:");
         JTextField customerIdField = new JTextField();
         JLabel itemNameLabel = new JLabel("Item Name:");
         JTextField itemNameField = new JTextField();
+        JLabel quantityLabel = new JLabel("Quantity:");
+        JTextField quantityField = new JTextField();
         JButton purchaseButton = new JButton("Purchase Item");
-
+    
         panel.add(customerIdLabel);
         panel.add(customerIdField);
         panel.add(itemNameLabel);
         panel.add(itemNameField);
+        panel.add(quantityLabel);
+        panel.add(quantityField);
         panel.add(purchaseButton);
-
+    
         purchaseButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String customerId = customerIdField.getText();
                 String itemName = itemNameField.getText();
+                int quantity = Integer.parseInt(quantityField.getText()); // Parse quantity
                 Customer customer = billingSystem.findCustomerById(customerId);
                 Item item = null;
                 for (Item i : billingSystem.getItems()) {
@@ -231,7 +264,7 @@ public class BillingSystemGUI extends JFrame {
                         break;
                     }
                 }
-
+    
                 if (customer != null && item != null) {
                     Bill bill = null;
                     for (Bill b : bills) {
@@ -240,40 +273,67 @@ public class BillingSystemGUI extends JFrame {
                             break;
                         }
                     }
-
+    
                     if (bill == null) {
                         bill = new Bill(customer);
                         bills.add(bill);
                     }
-
-                    bill.addItem(item);
+    
+                    bill.addItem(item, quantity); // Add item with quantity
                     JOptionPane.showMessageDialog(panel, "Item purchased successfully!");
-                    updateBillArea();
                 } else {
                     JOptionPane.showMessageDialog(panel, "Customer or item not found!");
                 }
             }
         });
-
+    
         return panel;
     }
+    
 
     private JPanel createViewBillsPanel() {
         JPanel panel = new JPanel(new BorderLayout());
+    
+        JLabel customerIdLabel = new JLabel("Enter Customer ID:");
+        JTextField customerIdField = new JTextField(10);
+        JButton viewButton = new JButton("View Bill");
+    
         billArea = new JTextArea(20, 50);
         billArea.setEditable(false);
-        updateBillArea();
-
+    
+        viewButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String customerId = customerIdField.getText();
+                Bill bill = findBillByCustomerId(customerId);
+                if (bill != null) {
+                    billArea.setText(bill.toString());
+                } else {
+                    billArea.setText("No bill found for the customer ID: " + customerId);
+                }
+            }
+        });
+    
+        JPanel inputPanel = new JPanel();
+        inputPanel.add(customerIdLabel);
+        inputPanel.add(customerIdField);
+        inputPanel.add(viewButton);
+    
+        panel.add(inputPanel, BorderLayout.NORTH);
         panel.add(new JScrollPane(billArea), BorderLayout.CENTER);
+    
         return panel;
     }
-
-    private void updateBillArea() {
-        billArea.setText("Bills:\n");
+    
+    private Bill findBillByCustomerId(String customerId) {
         for (Bill bill : bills) {
-            billArea.append(bill.toString() + "\n");
+            if (bill.getCustomer().getId().equals(customerId)) {
+                return bill;
+            }
         }
+        return null;
     }
+
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new BillingSystemGUI());
