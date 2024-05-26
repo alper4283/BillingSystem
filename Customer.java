@@ -35,6 +35,6 @@ public class Customer {
 
     @Override
     public String toString() {
-        return "Customer [id=" + id + ", name=" + name + ", email=" + email + "]";
+        return String.format("Customer ID: %s\nName: %s\nEmail: %s \n", id, name, email);
     }
 }
